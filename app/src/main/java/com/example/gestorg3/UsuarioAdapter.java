@@ -4,6 +4,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 
@@ -26,14 +27,17 @@ public class UsuarioAdapter extends RecyclerView.Adapter<UsuarioAdapter.ViewHold
         }
     }
 
+    @NonNull
     @Override
-    public UsuarioAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_registro, parent, false);
+    public UsuarioAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        // ✅ CORRECCIÓN: Usar item_usuario en lugar de activity_registro
+        View v = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_usuario, parent, false);
         return new ViewHolder(v);
     }
 
     @Override
-    public void onBindViewHolder(UsuarioAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull UsuarioAdapter.ViewHolder holder, int position) {
         Usuario u = lista.get(position);
         holder.txtNombre.setText(u.getNombreCompleto());
         holder.txtEmail.setText(u.getCorreo());
