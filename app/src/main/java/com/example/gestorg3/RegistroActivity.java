@@ -1,12 +1,17 @@
 package com.example.gestorg3;
 
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+
+// IMPORTAR LAS CLASES DE TU ESTRUCTURA
+import com.example.gestorg3.dao.UsuarioDAO;
+import com.example.gestorg3.modelos.Usuario;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.button.MaterialButton;
 
@@ -14,14 +19,14 @@ public class RegistroActivity extends AppCompatActivity {
 
     private TextInputEditText etNombre, etEmail, etTelefono, etPassword;
     private MaterialButton btnRegistrar;
-    private DatabaseHelper dbHelper;
+    private UsuarioDAO usuarioDAO; // 👈 CORRECCIÓN 1: Usar UsuarioDAO
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_registro);
 
-        dbHelper = new DatabaseHelper(this);
+        usuarioDAO = new UsuarioDAO(this); // 👈 CORRECCIÓN 2: Inicializar UsuarioDAO
 
         etNombre = findViewById(R.id.editTextNombre);
         etEmail = findViewById(R.id.editTextEmail);
@@ -33,6 +38,9 @@ public class RegistroActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) { registrarUsuario(); }
         });
+
+        // Configurar navegación de "Ya tengo cuenta"
+        findViewById(R.id.txtIniciarSesion).setOnClickListener(v -> finish());
     }
 
     private void registrarUsuario() {
@@ -41,35 +49,27 @@ public class RegistroActivity extends AppCompatActivity {
         String telefono = etTelefono.getText() != null ? etTelefono.getText().toString().trim() : "";
         String password = etPassword.getText() != null ? etPassword.getText().toString() : "";
 
-        if (TextUtils.isEmpty(nombre) || TextUtils.isEmpty(email) || TextUtils.isEmpty(telefono) || TextUtils.isEmpty(password)) {
-            Toast.makeText(this, "Completa todos los campos", Toast.LENGTH_SHORT).show();
+        if (TextUtils.isEmpty(nombre) || TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
+            // El teléfono puede ser opcional, pero nombre, email y password son necesarios
+            Toast.makeText(this, "Nombre, Email y Contraseña son obligatorios", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Aquí podrías hashear la contraseña si querés (recomendado en producción)
-        String contrasenaGuardada = password; // por ahora sin hash
+        // 1. Crear el objeto Usuario con todos los datos, incluyendo la contraseña
+        Usuario nuevoUsuario = new Usuario(nombre, email, telefono, password);
 
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("nombre_completo", nombre);
-        values.put("correo_electronico", email);
-        values.put("telefono", telefono);
-        values.put("contrasena", contrasenaGuardada);
+        // 2. Usar el método DAO para insertar
+        long id = usuarioDAO.insertarUsuario(nuevoUsuario); // 👈 CORRECCIÓN 3: Usamos el método DAO
 
-        long id = -1;
-        try {
-            id = db.insertOrThrow(DatabaseHelper.TABLE_USUARIOS, null, values);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            db.close();
-        }
-
-        if (id != -1) {
+        if (id > 0) {
             Toast.makeText(this, "Registro exitoso", Toast.LENGTH_SHORT).show();
-            finish(); // volver a la pantalla anterior (login)
+            // Volver al Login (o ir directamente a MainActivity si quieres, pero lo más común es volver a Login)
+            finish();
+        } else if (id == -1) {
+            // Este es el valor devuelto por 'db.insert' si falla debido a restricción UNIQUE (email)
+            Toast.makeText(this, "Error: El correo ya existe", Toast.LENGTH_LONG).show();
         } else {
-            Toast.makeText(this, "Error: posiblemente el correo ya existe", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Error al registrar el usuario.", Toast.LENGTH_LONG).show();
         }
     }
 }

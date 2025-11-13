@@ -8,6 +8,15 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+
+// Importaciones para manejo de hilos (Executor)
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
+import com.example.gestorg3.dao.UsuarioDAO;
+// Asegúrate de importar tu clase 'Usuario' si la usas directamente, aunque en este caso solo usamos la DAO
+// import com.example.gestorg3.modelos.Usuario;
+
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.button.MaterialButton;
 
@@ -15,14 +24,17 @@ public class LoginActivity extends AppCompatActivity {
 
     private TextInputEditText etEmail, etPassword;
     private MaterialButton btnLogin;
-    private DatabaseHelper dbHelper;
+    private UsuarioDAO usuarioDAO;
+
+    // Executor para ejecutar la base de datos en un hilo de fondo
+    private final Executor executor = Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_login);
 
-        dbHelper = new DatabaseHelper(this);
+        usuarioDAO = new UsuarioDAO(this);
 
         etEmail = findViewById(R.id.editTextEmail);
         etPassword = findViewById(R.id.editTextPassword);
@@ -35,7 +47,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        // Link al registro si querés
+        // Link al registro
         findViewById(R.id.txtRegistrarse).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -53,37 +65,64 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery(
-                "SELECT id, nombre_completo, correo_electronico, telefono, contrasena FROM " + DatabaseHelper.TABLE_USUARIOS +
-                        " WHERE correo_electronico = ?", new String[]{email});
+        // Ejecutar la operación de base de datos en el hilo de fondo (evita el ANR)
+        executor.execute(() -> {
+            SQLiteDatabase db = usuarioDAO.getReadableDatabase();
+            Cursor cursor = null;
+            boolean loginExitoso = false;
+            int userId = -1;
+            String userNombre = null;
+            String mensajeToast = "";
 
-        if (cursor != null && cursor.moveToFirst()) {
-            String contrasenaBD = cursor.getString(cursor.getColumnIndexOrThrow("contrasena"));
+            try {
+                // La consulta ahora busca 'contrasena', que ya existe en el nuevo DAO
+                cursor = db.rawQuery(
+                        "SELECT id, nombre_completo, contrasena FROM usuarios WHERE correo = ?",
+                        new String[]{email}
+                );
 
-            // si en el futuro guardás con hash, compará con hash
-            if (password.equals(contrasenaBD)) {
-                // Login correcto -> abrir MainActivity
-                int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
-                String nombre = cursor.getString(cursor.getColumnIndexOrThrow("nombre_completo"));
+                if (cursor.moveToFirst()) {
+                    // Obtenemos el índice de las columnas usando el nombre
+                    String contrasenaBD = cursor.getString(cursor.getColumnIndexOrThrow("contrasena"));
 
-                cursor.close();
-                db.close();
-
-                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                intent.putExtra("userId", id);
-                intent.putExtra("userNombre", nombre);
-                startActivity(intent);
-                finish();
-            } else {
-                Toast.makeText(this, "Contraseña incorrecta", Toast.LENGTH_SHORT).show();
-                cursor.close();
+                    if (password.equals(contrasenaBD)) {
+                        // Login correcto
+                        loginExitoso = true;
+                        userId = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+                        userNombre = cursor.getString(cursor.getColumnIndexOrThrow("nombre_completo"));
+                    } else {
+                        mensajeToast = "Contraseña incorrecta";
+                    }
+                } else {
+                    mensajeToast = "Usuario no encontrado";
+                }
+            } catch (Exception e) {
+                // Captura cualquier error de DB, incluyendo la excepción de columna
+                mensajeToast = "Error en el acceso a la base de datos.";
+                e.printStackTrace();
+            } finally {
+                if (cursor != null) cursor.close();
                 db.close();
             }
-        } else {
-            if (cursor != null) cursor.close();
-            db.close();
-            Toast.makeText(this, "Usuario no encontrado", Toast.LENGTH_SHORT).show();
-        }
+
+            // Volver al Hilo Principal (UI) para mostrar el resultado o navegar
+            if (loginExitoso) {
+                final int finalUserId = userId;
+                final String finalUserNombre = userNombre;
+                runOnUiThread(() -> {
+                    Toast.makeText(LoginActivity.this, "¡Inicio de sesión exitoso!", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                    intent.putExtra("userId", finalUserId);
+                    intent.putExtra("userNombre", finalUserNombre);
+                    startActivity(intent);
+                    finish();
+                });
+            } else {
+                final String finalMensajeToast = mensajeToast;
+                runOnUiThread(() -> {
+                    Toast.makeText(LoginActivity.this, finalMensajeToast, Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
 }
