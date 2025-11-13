@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.content.Intent;
 
+// Asegúrate que estos imports coincidan con tus carpetas reales
 import com.example.gestorg3.adaptadores.UsuarioAdapter;
 import com.example.gestorg3.dao.UsuarioDAO;
 import com.example.gestorg3.modelos.Usuario;
@@ -39,7 +40,8 @@ public class MainActivity extends AppCompatActivity {
         usuarioDAO = new UsuarioDAO(this);
 
         // 🔹 Obtenemos los usuarios de la base de datos
-        ArrayList<Usuario> usuarios = usuarioDAO.obtenerUsuarios();
+        // CORRECCIÓN: El método en tu DAO se llama "obtenerTodosUsuarios"
+        ArrayList<Usuario> usuarios = usuarioDAO.obtenerTodosUsuarios();
 
         // 🔹 Configuramos el RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -53,24 +55,29 @@ public class MainActivity extends AppCompatActivity {
         fabCerrarSesion.setOnClickListener(v -> finish());
 
         // 🔹 Acción del botón flotante (agregar usuario)
+        // Asegúrate de tener creada la clase "RegistroActivity"
         fabAgregarUsuario.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, RegistroActivity.class);
             startActivity(intent);
         });
     }
 
-    // ✅ Este método se ejecuta cada vez que la pantalla vuelve a mostrarse
+    // ✅ Este método se ejecuta cada vez que la pantalla vuelve a mostrarse (al volver del registro)
     @Override
     protected void onResume() {
         super.onResume();
-        actualizarLista(); // 👈 Esto recarga los usuarios cada vez que volvés
+        actualizarLista();
     }
 
-    // 🔹 Método para refrescar la lista luego de editar/eliminar
+    // 🔹 Método para refrescar la lista luego de editar/eliminar/agregar
     public void actualizarLista() {
-        ArrayList<Usuario> usuariosActualizados = usuarioDAO.obtenerUsuarios();
-        adapter.actualizarDatos(usuariosActualizados);
-        actualizarVisibilidadLista(usuariosActualizados);
+        // CORRECCIÓN: Aquí también debemos usar el nombre correcto del método
+        ArrayList<Usuario> usuariosActualizados = usuarioDAO.obtenerTodosUsuarios();
+
+        if (adapter != null) {
+            adapter.actualizarDatos(usuariosActualizados);
+            actualizarVisibilidadLista(usuariosActualizados);
+        }
     }
 
     private void actualizarVisibilidadLista(ArrayList<Usuario> usuarios) {

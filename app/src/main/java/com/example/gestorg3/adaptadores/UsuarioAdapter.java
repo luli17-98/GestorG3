@@ -12,7 +12,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gestorg3.R;
-// 👇 AQUÍ ESTABAN LOS ERRORES, AHORA ESTÁN CORREGIDOS:
 import com.example.gestorg3.modelos.Usuario;
 import com.example.gestorg3.dao.UsuarioDAO;
 
@@ -55,8 +54,9 @@ public class UsuarioAdapter extends RecyclerView.Adapter<UsuarioAdapter.ViewHold
     }
 
     @Override
-    public void onBindViewHolder(@NonNull UsuarioAdapter.ViewHolder holder, int position) { // Nota: quité "final" en position, no es necesario en versiones nuevas
-        Usuario u = lista.get(holder.getAdapterPosition()); // Más seguro usar getAdapterPosition()
+    public void onBindViewHolder(@NonNull UsuarioAdapter.ViewHolder holder, int position) {
+        // Obtenemos el objeto usando la posición que nos da el método para mostrar datos
+        Usuario u = lista.get(position);
 
         holder.txtNombre.setText(u.getNombreCompleto());
         holder.txtEmail.setText(u.getCorreo());
@@ -64,24 +64,34 @@ public class UsuarioAdapter extends RecyclerView.Adapter<UsuarioAdapter.ViewHold
 
         // 🔹 Botón Editar
         holder.btnEditar.setOnClickListener(v -> {
-            Toast.makeText(context, "Editar: " + u.getNombreCompleto(), Toast.LENGTH_SHORT).show();
-            // Aquí podés abrir un diálogo o una Activity para editar
+            // Para el clic, verificamos la posición actual (más seguro)
+            int currentPos = holder.getAdapterPosition();
+            if (currentPos != RecyclerView.NO_POSITION) {
+                Usuario usuarioActual = lista.get(currentPos);
+                Toast.makeText(context, "Editar: " + usuarioActual.getNombreCompleto(), Toast.LENGTH_SHORT).show();
+                // Aquí puedes agregar la lógica para abrir el diálogo de edición
+            }
         });
 
         // 🔹 Botón Eliminar
         holder.btnEliminar.setOnClickListener(v -> {
-            // Usar holder.getAdapterPosition() asegura que obtenemos la posición actual real
+            // IMPORTANTE: Usamos getAdapterPosition() para saber la posición real al momento del clic
             int currentPosition = holder.getAdapterPosition();
+
+            // Validación para evitar cierres inesperados (crashes)
             if (currentPosition == RecyclerView.NO_POSITION) return;
 
             Usuario usuarioAEliminar = lista.get(currentPosition);
+
+            // 1. Eliminar de la base de datos
             int filasEliminadas = usuarioDAO.eliminarUsuario(usuarioAEliminar.getId());
 
             if (filasEliminadas > 0) {
                 Toast.makeText(context, "Usuario eliminado", Toast.LENGTH_SHORT).show();
+                // 2. Eliminar de la lista visual
                 lista.remove(currentPosition);
+                // 3. Notificar al adaptador para que actualice la vista
                 notifyItemRemoved(currentPosition);
-                // Opcional: notifyItemRangeChanged es bueno, pero a veces notifyDataSetChanged es más estable si hay errores visuales
                 notifyItemRangeChanged(currentPosition, lista.size());
             } else {
                 Toast.makeText(context, "Error al eliminar", Toast.LENGTH_SHORT).show();
