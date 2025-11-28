@@ -30,31 +30,31 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 🔹 Enlazamos vistas
+        //  Enlazamos vistas
         recyclerView = findViewById(R.id.recyclerViewUsuarios);
         txtSinUsuarios = findViewById(R.id.txtSinUsuarios);
         fabCerrarSesion = findViewById(R.id.fabCerrarSesion);
         fabAgregarUsuario = findViewById(R.id.fabAgregarUsuario);
 
-        // 🔹 Inicializamos DAO
+        //  Inicializamos DAO
         usuarioDAO = new UsuarioDAO(this);
 
-        // 🔹 Obtenemos los usuarios de la base de datos
+        //  Obtenemos los usuarios de la base de datos
         // CORRECCIÓN: El método en tu DAO se llama "obtenerTodosUsuarios"
         ArrayList<Usuario> usuarios = usuarioDAO.obtenerTodosUsuarios();
 
-        // 🔹 Configuramos el RecyclerView
+        //  Configuramos el RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new UsuarioAdapter(this, usuarios, usuarioDAO);
         recyclerView.setAdapter(adapter);
 
-        // 🔹 Mostrar u ocultar el mensaje "sin usuarios"
+        //  Mostrar u ocultar el mensaje "sin usuarios"
         actualizarVisibilidadLista(usuarios);
 
-        // 🔹 Acción del botón flotante (cerrar sesión)
+        //  Acción del botón flotante (cerrar sesión)
         fabCerrarSesion.setOnClickListener(v -> finish());
 
-        // 🔹 Acción del botón flotante (agregar usuario)
+        //  Acción del botón flotante (agregar usuario)
         // Asegúrate de tener creada la clase "RegistroActivity"
         fabAgregarUsuario.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, RegistroActivity.class);
@@ -62,14 +62,14 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // ✅ Este método se ejecuta cada vez que la pantalla vuelve a mostrarse (al volver del registro)
+    // Este método se ejecuta cada vez que la pantalla vuelve a mostrarse (al volver del registro)
     @Override
     protected void onResume() {
         super.onResume();
         actualizarLista();
     }
 
-    // 🔹 Método para refrescar la lista luego de editar/eliminar/agregar
+    // Método para refrescar la lista luego de editar/eliminar/agregar
     public void actualizarLista() {
         // CORRECCIÓN: Aquí también debemos usar el nombre correcto del método
         ArrayList<Usuario> usuariosActualizados = usuarioDAO.obtenerTodosUsuarios();

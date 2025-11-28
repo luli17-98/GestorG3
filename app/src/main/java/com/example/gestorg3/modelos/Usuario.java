@@ -35,7 +35,7 @@ public class Usuario {
     public void setNombreCompleto(String nombreCompleto) { this.nombreCompleto = nombreCompleto; }
 
     public String getCorreo() { return correo; }
-    public void setCorreo(String correo) { this.correo = correo; } // ⬅️ CORRECCIÓN: Ahora solo asigna el valor
+    public void setCorreo(String correo) { this.correo = correo; } //  CORRECCIÓN: Ahora solo asigna el valor
 
     public String getTelefono() { return telefono; }
     public void setTelefono(String telefono) { this.telefono = telefono; }

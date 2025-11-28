@@ -1,9 +1,12 @@
 package com.example.gestorg3.adaptadores;
 
+import android.app.Dialog;
 import android.content.Context;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -14,6 +17,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.gestorg3.R;
 import com.example.gestorg3.modelos.Usuario;
 import com.example.gestorg3.dao.UsuarioDAO;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
 
@@ -62,14 +67,14 @@ public class UsuarioAdapter extends RecyclerView.Adapter<UsuarioAdapter.ViewHold
         holder.txtEmail.setText(u.getCorreo());
         holder.txtTelefono.setText(u.getTelefono());
 
-        // 🔹 Botón Editar
+        // 🔹 Botón Editar - AHORA CON FUNCIONALIDAD COMPLETA
         holder.btnEditar.setOnClickListener(v -> {
             // Para el clic, verificamos la posición actual (más seguro)
             int currentPos = holder.getAdapterPosition();
             if (currentPos != RecyclerView.NO_POSITION) {
                 Usuario usuarioActual = lista.get(currentPos);
-                Toast.makeText(context, "Editar: " + usuarioActual.getNombreCompleto(), Toast.LENGTH_SHORT).show();
-                // Aquí puedes agregar la lógica para abrir el diálogo de edición
+                // Abrimos el diálogo de edición
+                mostrarDialogoEditar(usuarioActual, currentPos);
             }
         });
 
@@ -109,5 +114,76 @@ public class UsuarioAdapter extends RecyclerView.Adapter<UsuarioAdapter.ViewHold
         this.lista.clear();
         this.lista.addAll(nuevaLista);
         notifyDataSetChanged();
+    }
+
+    // 🔹 MÉTODO PARA MOSTRAR EL DIÁLOGO DE EDICIÓN
+    private void mostrarDialogoEditar(Usuario usuario, int position) {
+        // Crear el diálogo
+        Dialog dialog = new Dialog(context);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_editar_usuario);
+
+        // Configurar el tamaño del diálogo
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        // Referencias a los campos del diálogo
+        TextInputEditText etNombre = dialog.findViewById(R.id.editTextNombreDialog);
+        TextInputEditText etEmail = dialog.findViewById(R.id.editTextEmailDialog);
+        TextInputEditText etTelefono = dialog.findViewById(R.id.editTextTelefonoDialog);
+        TextInputEditText etPassword = dialog.findViewById(R.id.editTextPasswordDialog);
+        MaterialButton btnGuardar = dialog.findViewById(R.id.btnGuardar);
+        MaterialButton btnCancelar = dialog.findViewById(R.id.btnCancelar);
+
+        // Rellenar los campos con los datos actuales
+        etNombre.setText(usuario.getNombreCompleto());
+        etEmail.setText(usuario.getCorreo());
+        etTelefono.setText(usuario.getTelefono());
+        // La contraseña se deja vacía por seguridad
+
+        // Botón Cancelar
+        btnCancelar.setOnClickListener(v -> dialog.dismiss());
+
+        // Botón Guardar
+        btnGuardar.setOnClickListener(v -> {
+            String nombre = etNombre.getText() != null ? etNombre.getText().toString().trim() : "";
+            String email = etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
+            String telefono = etTelefono.getText() != null ? etTelefono.getText().toString().trim() : "";
+            String password = etPassword.getText() != null ? etPassword.getText().toString().trim() : "";
+
+            // Validación básica
+            if (TextUtils.isEmpty(nombre) || TextUtils.isEmpty(email)) {
+                Toast.makeText(context, "Nombre y Email son obligatorios", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Crear objeto usuario actualizado
+            // Si no se ingresó contraseña, mantener la anterior
+            Usuario usuarioActualizado = new Usuario(
+                    usuario.getId(),
+                    nombre,
+                    email,
+                    telefono,
+                    TextUtils.isEmpty(password) ? usuario.getContrasena() : password
+            );
+
+            // Actualizar en la base de datos
+            int filasActualizadas = usuarioDAO.actualizarUsuario(usuarioActualizado);
+
+            if (filasActualizadas > 0) {
+                Toast.makeText(context, "Usuario actualizado correctamente", Toast.LENGTH_SHORT).show();
+
+                // Actualizar la lista visual
+                lista.set(position, usuarioActualizado);
+                notifyItemChanged(position);
+
+                dialog.dismiss();
+            } else {
+                Toast.makeText(context, "Error al actualizar usuario", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        dialog.show();
     }
 }

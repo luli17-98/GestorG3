@@ -26,7 +26,7 @@ public class UsuarioDAO extends SQLiteOpenHelper {
     private static final String COLUMN_NOMBRE = "nombre_completo";
     private static final String COLUMN_EMAIL = "correo";
     private static final String COLUMN_TELEFONO = "telefono";
-    private static final String COLUMN_CONTRASENA = "contrasena"; // <--- NUEVA COLUMNA AGREGADA
+    private static final String COLUMN_CONTRASENA = "contrasena";
 
     // SQL para crear tabla
     private static final String CREATE_TABLE =
@@ -34,7 +34,7 @@ public class UsuarioDAO extends SQLiteOpenHelper {
                     COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     COLUMN_NOMBRE + " TEXT NOT NULL, " +
                     COLUMN_EMAIL + " TEXT UNIQUE NOT NULL, " +
-                    COLUMN_CONTRASENA + " TEXT NOT NULL, " + // <--- AGREGADA AQUÍ
+                    COLUMN_CONTRASENA + " TEXT NOT NULL, " +
                     COLUMN_TELEFONO + " TEXT" +
                     ")";
 
@@ -55,7 +55,6 @@ public class UsuarioDAO extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    // ==================== MÉTODOS CRUD ====================
 
     /**
      * Insertar nuevo usuario. Ahora incluye la contraseña.
@@ -66,7 +65,7 @@ public class UsuarioDAO extends SQLiteOpenHelper {
 
         values.put(COLUMN_NOMBRE, usuario.getNombreCompleto());
         values.put(COLUMN_EMAIL, usuario.getCorreo());
-        values.put(COLUMN_CONTRASENA, usuario.getContrasena()); // <--- AGREGADA AQUÍ
+        values.put(COLUMN_CONTRASENA, usuario.getContrasena());
         values.put(COLUMN_TELEFONO, usuario.getTelefono());
 
         long id = db.insert(TABLE_USUARIOS, null, values);
@@ -92,7 +91,7 @@ public class UsuarioDAO extends SQLiteOpenHelper {
                 usuario.setNombreCompleto(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NOMBRE)));
                 usuario.setCorreo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_EMAIL)));
                 usuario.setTelefono(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TELEFONO)));
-                usuario.setContrasena(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTRASENA))); // <--- AGREGADA AQUÍ
+                usuario.setContrasena(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTRASENA)));
 
                 lista.add(usuario);
             } while (cursor.moveToNext());
@@ -123,7 +122,7 @@ public class UsuarioDAO extends SQLiteOpenHelper {
             usuario.setNombreCompleto(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NOMBRE)));
             usuario.setCorreo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_EMAIL)));
             usuario.setTelefono(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TELEFONO)));
-            usuario.setContrasena(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTRASENA))); // <--- AGREGADA AQUÍ
+            usuario.setContrasena(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTRASENA)));
             cursor.close();
         }
 
@@ -140,7 +139,7 @@ public class UsuarioDAO extends SQLiteOpenHelper {
 
         values.put(COLUMN_NOMBRE, usuario.getNombreCompleto());
         values.put(COLUMN_EMAIL, usuario.getCorreo());
-        values.put(COLUMN_CONTRASENA, usuario.getContrasena()); // <--- AGREGADA AQUÍ
+        values.put(COLUMN_CONTRASENA, usuario.getContrasena());
         values.put(COLUMN_TELEFONO, usuario.getTelefono());
 
         int rowsAffected = db.update(TABLE_USUARIOS,
@@ -185,7 +184,7 @@ public class UsuarioDAO extends SQLiteOpenHelper {
                 usuario.setNombreCompleto(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NOMBRE)));
                 usuario.setCorreo(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_EMAIL)));
                 usuario.setTelefono(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TELEFONO)));
-                usuario.setContrasena(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTRASENA))); // <--- AGREGADA AQUÍ
+                usuario.setContrasena(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTRASENA)));
 
                 lista.add(usuario);
             } while (cursor.moveToNext());
